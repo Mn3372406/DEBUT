@@ -1,0 +1,227 @@
+<!DOCTYPE html>  
+<html lang="fr">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
+    <title>Mssteker - Tech Portfolio</title>  
+    <style>  
+        :root {  
+            --cyber-green: #00ff41;  
+            --glass-white: rgba(255, 255, 255, 0.1);  
+            --btn-dark: rgba(10, 10, 10, 0.8);
+        }  
+        
+        body, html {  
+            margin: 0; padding: 0;  
+            width: 100%; height: 100%;  
+            background: radial-gradient(circle at 50% 50%, #082018 0%, #000000 100%);  
+            overflow: hidden;  
+            font-family: 'Consolas', monospace;  
+            touch-action: none;  
+        }  
+
+        /* --- 1. INTRO VIDÉO --- */
+        #intro-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 10000; background-color: #000;
+            display: flex; justify-content: center; align-items: center;
+            clip-path: circle(150% at 50% 50%); 
+            -webkit-clip-path: circle(150% at 50% 50%);
+            transition: clip-path 1.8s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        #intro-overlay.closed { clip-path: circle(0% at 50% 50%); -webkit-clip-path: circle(0% at 50% 50%); pointer-events: none; }
+        #intro-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+        #intro-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, rgba(255,255,255,0) 20%, rgba(135, 206, 250, 0.4) 60%, rgba(255, 255, 255, 0.8) 100%); z-index: 2; opacity: 0; transition: opacity 0.5s ease; mix-blend-mode: screen; }
+
+        /* --- 2. LAYER SVG (TOILE D'ARAIGNÉE) --- */
+        #web-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 900; 
+        }
+        .web-line {
+            stroke: var(--cyber-green); stroke-width: 1.2; stroke-linecap: round;
+            fill: none; opacity: 0; stroke-dasharray: 2000; stroke-dashoffset: 2000;
+            filter: drop-shadow(0 0 4px var(--cyber-green));
+        }
+        .line-active { opacity: 1; animation: dash 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes dash { to { stroke-dashoffset: 0; } }
+
+        /* --- 3. GRILLE DU SITE (ARRIÈRE-PLAN ANIMÉ) --- */  
+        #viewport { position: absolute; width: 300vw; height: 300vh; top: -100vh; left: -100vw; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 40px; z-index: 1; will-change: transform; }  
+        .slot { display: flex; justify-content: center; align-items: center; }  
+        .photo { width: 160px; height: 100px; border-radius: 6px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(0, 255, 65, 0.3); transition: transform 0.2s ease-out; }  
+        @media (min-width: 768px) { .photo { width: 240px; height: 150px; } #viewport { grid-template-columns: repeat(10, 1fr); gap: 80px; } }  
+        .photo img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }  
+
+        /* --- 4. BLOC CENTRAL RESPONSIVE --- */  
+        #central-card {  
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);  
+            width: 85%; max-width: 450px; padding: 40px 20px; z-index: 1000;  
+            text-align: center; background: var(--glass-white);  
+            backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%);  
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; color: white;  
+            opacity: 0; animation: fadeInCard 1s ease forwards; animation-delay: 1.5s;
+            transition: all 0.9s cubic-bezier(0.65, 0, 0.35, 1), background 0.5s ease;
+        }  
+        
+        @media (max-width: 768px) { #central-card { width: 100%; border-radius: 0; border-left: none; border-right: none; } }
+
+        /* ÉTAT EXPANSION : Reste bloqué en plein écran flou */
+        #central-card.expanded {
+            width: 100vw !important; height: 100vh !important; max-width: none;
+            border-radius: 0 !important; border: none; 
+            background: rgba(0, 0, 0, 0.4); /* Opacité ajustée pour garder le flou visible */
+            backdrop-filter: blur(60px) saturate(180%);
+            -webkit-backdrop-filter: blur(60px) saturate(180%);
+        }
+
+        .content-hidden { opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+
+        @keyframes fadeInCard { to { opacity: 1; } }
+        h1 { font-size: 1.8rem; letter-spacing: 4px; margin: 0; }  
+        p { color: var(--cyber-green); font-size: 0.8rem; margin-top: 10px; text-transform: uppercase; }  
+
+        /* --- 5. BOUTON AVEC ANIMATIONS HOVER --- */
+        .btn-suivant {  
+            position: relative; margin-top: 30px; 
+            background: var(--btn-dark); color: white; border: 1px solid rgba(255,255,255,0.2);  
+            padding: 15px 40px; font-weight: bold; border-radius: 5px;  
+            cursor: pointer; width: 80%; overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .btn-suivant::before, .btn-suivant::after {
+            content: ''; position: absolute; top: 50%; width: 2px; height: 0%;
+            background: var(--cyber-green); transform: translateY(-50%);
+            transition: height 0.3s ease;
+        }
+        .btn-suivant::before { left: 0; }
+        .btn-suivant::after { right: 0; }
+        .btn-suivant:hover {
+            background: #ffffff; color: #000;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            border-color: #fff;
+        }
+        .btn-suivant:hover::before, .btn-suivant:hover::after { height: 100%; }
+
+    </style>
+</head>  
+<body>  
+
+<div id="intro-overlay">
+    <video id="intro-video" muted playsinline autoplay>
+        <source src="video.mp4" type="video/mp4">
+    </video>
+    <div id="intro-glow"></div>
+</div>
+
+<svg id="web-canvas"></svg>
+
+<div id="viewport"></div>  
+
+<div id="central-card">  
+    <div id="card-content">
+        <h1>MSSTEKER</h1>  
+        <p>Dev | Cyber | Crypto</p>  
+        <button class="btn-suivant" onclick="triggerWebExpansion()">Consulter</button>  
+    </div>
+</div>  
+
+<script>  
+    // --- VIDÉO ---
+    const video = document.getElementById('intro-video');
+    const overlay = document.getElementById('intro-overlay');
+    const glow = document.getElementById('intro-glow');
+
+    function startTransition() {
+        glow.style.opacity = '1';
+        setTimeout(() => { overlay.classList.add('closed'); }, 100);
+        setTimeout(() => { overlay.style.display = 'none'; generateWebLines(); }, 2000);
+    }
+    video.onended = () => startTransition();
+    setTimeout(() => { if (!overlay.classList.contains('closed') && video.paused) startTransition(); }, 6000);
+
+    // --- TOILE D'ARAIGNÉE ---
+    const svgCanvas = document.getElementById('web-canvas');
+    const LINES_COUNT = 24; 
+
+    function generateWebLines() {
+        for(let i=0; i<LINES_COUNT; i++) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("class", "web-line");
+            svgCanvas.appendChild(line);
+        }
+    }
+
+    function triggerWebExpansion() {
+        const card = document.getElementById('central-card');
+        const content = document.getElementById('card-content');
+        const lines = document.querySelectorAll('.web-line');
+        
+        content.classList.add('content-hidden');
+        const rect = card.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        lines.forEach((line, i) => {
+            const angle = (i / LINES_COUNT) * Math.PI * 2;
+            const dist = Math.max(vw, vh);
+            const tx = vw/2 + Math.cos(angle) * dist;
+            const ty = vh/2 + Math.sin(angle) * dist;
+
+            const start = getPointOnRect(angle, rect.width, rect.height);
+            const sx = rect.left + rect.width/2 + start.x;
+            const sy = rect.top + rect.height/2 + start.y;
+
+            line.setAttribute('x1', sx); line.setAttribute('y1', sy);
+            line.setAttribute('x2', tx); line.setAttribute('y2', ty);
+            
+            setTimeout(() => line.classList.add('line-active'), i * 15);
+        });
+
+        // Expansion : Le flou s'étend et RESTE jusqu'à la redirection
+        setTimeout(() => {
+            card.classList.add('expanded');
+        }, 400);
+
+        // Délai de redirection ajusté pour laisser l'immersion se faire
+        setTimeout(() => { 
+            window.location.href = 'https://porfo-git-main-mn3372406s-projects.vercel.app/'; 
+        }, 2500);
+    }
+
+    function getPointOnRect(angle, w, h) {
+        const cos = Math.cos(angle); const sin = Math.sin(angle);
+        const factor = Math.min(Math.abs((w/2)/cos), Math.abs((h/2)/sin));
+        return { x: cos * factor, y: sin * factor };
+    }
+
+    // --- GRILLE PARALLAXE (L'animation continue même après clic) ---
+    const wall = document.getElementById('viewport');  
+    const TECH_IMAGES = ['https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400','https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400','https://images.unsplash.com/photo-1563986768609-322da13575f3?w=400','https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400','https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400'];  
+    const items = [];  
+    for (let i = 0; i < 64; i++) {  
+        const slot = document.createElement('div'); slot.className = 'slot';  
+        if (!((Math.floor(i/8) >= 3 && Math.floor(i/8) <= 4) && (i%8 >= 3 && i%8 <= 4))) {  
+            const c = document.createElement('div'); c.className = 'photo';  
+            const img = document.createElement('img'); img.src = TECH_IMAGES[i % TECH_IMAGES.length];  
+            c.appendChild(img); slot.appendChild(c);  
+            items.push({ el: c, px: 1 + Math.random() * 2, py: 1 + Math.random() * 2 });  
+        }  
+        wall.appendChild(slot);  
+    }  
+    let mx = 0, my = 0, cx = 0, cy = 0;  
+    window.addEventListener('mousemove', (e) => { mx = (e.clientX/window.innerWidth)-0.5; my = (e.clientY/window.innerHeight)-0.5; });
+    window.addEventListener('touchmove', (e) => { mx = (e.touches[0].clientX/window.innerWidth)-0.5; my = (e.touches[0].clientY/window.innerHeight)-0.5; });
+
+    function anim() {  
+        cx += (mx - cx) * 0.1; cy += (my - cy) * 0.1;  
+        items.forEach(item => { 
+            item.el.style.transform = `translate3d(${cx*-400*item.px}px, ${cy*-400*item.py}px, 0)`; 
+        });  
+        requestAnimationFrame(anim);  
+    }  
+    anim();  
+</script>
+
+</body>  
+</html>
